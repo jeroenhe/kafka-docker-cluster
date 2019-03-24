@@ -1,0 +1,135 @@
+version: "2.4"
+
+services: 
+    zoo1:
+        image: 31z4/zookeeper
+        restart: always
+        hostname: zoo1
+        ports:
+            - 2181:2181
+        environment:
+            ZOO_MY_ID: 1
+            ZOO_SERVERS: server.1=0.0.0.0:2888:3888 server.2=zoo2:2888:3888 server.3=zoo3:2888:3888
+
+    zoo2:
+        image: 31z4/zookeeper
+        restart: always
+        hostname: zoo2
+        ports:
+            - 2182:2181
+        environment:
+            ZOO_MY_ID: 2
+            ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=0.0.0.0:2888:3888 server.3=zoo3:2888:3888
+
+    zoo3:
+        image: 31z4/zookeeper
+        restart: always
+        hostname: zoo3
+        ports:
+            - 2183:2181
+        environment:
+            ZOO_MY_ID: 3
+            ZOO_SERVERS: server.1=zoo1:2888:3888 server.2=zoo2:2888:3888 server.3=0.0.0.0:2888:3888
+
+    kafka1:
+      image: wurstmeister/kafka:1.1.0
+      container_name: kafka1
+      hostname: kafka1
+      restart: unless-stopped
+      ports:
+        - "9121:9121"
+      depends_on:
+        - "zoo1"
+        - "zoo2"
+        - "zoo3"
+      environment:
+        JAVA_ARGS:                            -Xmx512m
+        KAFKA_LISTENERS:                      PLAINTEXT://:9121
+        KAFKA_ADVERTISED_LISTENERS:           PLAINTEXT://kafka1:9121
+        KAFKA_ADVERTISED_PORT:                9121
+        KAFKA_PORT:                           9121
+        KAFKA_BROKER_ID:                      1
+        KAFKA_ZOOKEEPER_CONNECT:              zoo1,zoo2,zoo3
+        KAFKA_AUTO_CREATE_TOPICS_ENABLE:      'false'
+        KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+        KAFKA_MIN_INSYNC_REPLICAS:            2
+        KAFKA_MESSAGE_MAX_BYTES:              3000000
+        KAFKA_REPLICA_FETCH_MAX_BYTES:        3000000
+        KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: 'false'
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+
+    kafka2:
+      image: wurstmeister/kafka:1.1.0
+      container_name: kafka2
+      hostname: kafka2
+      restart: unless-stopped
+      ports:
+        - "9122:9122"
+      depends_on:
+        - "zoo1"
+        - "zoo2"
+        - "zoo3"
+      environment:
+        JAVA_ARGS:                            -Xmx512m
+        KAFKA_LISTENERS:                      PLAINTEXT://:9122
+        KAFKA_ADVERTISED_LISTENERS:           PLAINTEXT://kafka2:9122
+        KAFKA_ADVERTISED_PORT:                9122
+        KAFKA_PORT:                           9122
+        KAFKA_BROKER_ID:                      2
+        KAFKA_ZOOKEEPER_CONNECT:              zoo2,zoo3,zoo1
+        KAFKA_AUTO_CREATE_TOPICS_ENABLE:      'false'
+        KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+        KAFKA_MIN_INSYNC_REPLICAS:            2
+        KAFKA_MESSAGE_MAX_BYTES:              3000000
+        KAFKA_REPLICA_FETCH_MAX_BYTES:        3000000
+        KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: 'false'
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+
+    kafka3:
+      image: wurstmeister/kafka:1.1.0
+      container_name: kafka3
+      hostname: kafka3
+      restart: unless-stopped
+      ports:
+        - "9123:9123"
+      depends_on:
+        - "zoo1"
+        - "zoo2"
+        - "zoo3"
+      environment:
+        JAVA_ARGS:                            -Xmx512m
+        KAFKA_LISTENERS:                      PLAINTEXT://:9123
+        KAFKA_ADVERTISED_LISTENERS:           PLAINTEXT://kafka3:9123
+        KAFKA_ADVERTISED_PORT:                9123
+        KAFKA_PORT:                           9123
+        KAFKA_BROKER_ID:                      3
+        KAFKA_ZOOKEEPER_CONNECT:              zoo3,zoo2,zoo1
+        KAFKA_AUTO_CREATE_TOPICS_ENABLE:      'false'
+        KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
+        KAFKA_MIN_INSYNC_REPLICAS:            2
+        KAFKA_MESSAGE_MAX_BYTES:              3000000
+        KAFKA_REPLICA_FETCH_MAX_BYTES:        3000000
+        KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: 'false'
+        KAFKA_CREATE_TOPICS:                  "test:8:2"
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+
+    producer:
+      image: wurstmeister/kafka:1.1.0
+      container_name: producer
+      depends_on:
+      - "kafka1"
+      - "kafka2"
+      - "kafka3"
+      command: /bin/sh -c 'seq 100000 | /opt/kafka/bin/kafka-console-producer.sh --request-required-acks 1 --broker-list kafka1:9121,kafka2:9122,kafka3:9123 --topic test && echo "Produced 42 messages."'
+
+    consumer:
+      image: wurstmeister/kafka:1.1.0
+      container_name: consumer
+      depends_on:
+      - "kafka1"
+      - "kafka2"
+      - "kafka3"
+      command: /bin/sh -c '/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka1:9121,kafka2:9122,kafka3:9123 --consumer-property group.id=test --topic test --from-beginning --timeout-ms 30000'
