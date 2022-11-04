@@ -1,132 +1,139 @@
-version: "3.8"
-
-services: 
-  zoo1:
-    image: zookeeper:${ZOOKEEPER_VERSION}
-    restart: unless-stopped
+services:
+  broker1:
+    image: confluentinc/cp-kafka:${KAFKA_VERSION}${PLATFORM}
+    hostname: broker1
+    container_name: broker1
     ports:
-      - "2181:2181"
+      - "9092:9092"
+      - "9101:9101"
     environment:
-      # https://hub.docker.com/_/zookeeper/?tab=description&page=1&ordering=last_updated
-      ZOO_MY_ID: 1
-      ZOO_SERVERS: server.1=0.0.0.0:2888:3888;2181 server.2=zoo2:2888:3888;2181 server.3=zoo3:2888:3888;2181
+      KAFKA_BROKER_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker1:9092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_NODE_ID: 1
+      # https://kafka.apache.org/documentation/#brokerconfigs_controller.quorum.voters
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker1:29092,2@broker2:29092'
+      KAFKA_LISTENERS: 'PLAINTEXT://:9092,CONTROLLER://:29092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+    volumes:
+      - type: bind
+        source: ./scripts/update_run.sh
+        target: /tmp/update_run.sh
+      - type: volume
+        source: kafka1_data
+        target: /var/lib/kafka
+    command: "bash -c 'if [ ! -f /tmp/update_run.sh ]; then echo \"ERROR: Did you forget the update_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/update_run.sh && /etc/confluent/docker/run ; fi'"
 
-  zoo2:
-    image: zookeeper:${ZOOKEEPER_VERSION}
-    restart: unless-stopped
+  broker2:
+    image: confluentinc/cp-kafka:${KAFKA_VERSION}${PLATFORM}
+    hostname: broker2
+    container_name: broker2
     ports:
-      - "2182:2181"
+      - "9093:9092"
+      - "9102:9102"
     environment:
-      # https://hub.docker.com/_/zookeeper/?tab=description&page=1&ordering=last_updated
-      ZOO_MY_ID: 2
-      ZOO_SERVERS: server.1=0.0.0.0:2888:3888;2181 server.2=zoo2:2888:3888;2181 server.3=zoo3:2888:3888;2181
+      KAFKA_BROKER_ID: 2
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker2:9092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_JMX_PORT: 9102
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_NODE_ID: 2
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker1:29092,2@broker2:29092'
+      KAFKA_LISTENERS: 'PLAINTEXT://:9092,CONTROLLER://:29092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+    volumes:
+      - type: bind
+        source: ./scripts/update_run.sh
+        target: /tmp/update_run.sh
+      - type: volume
+        source: kafka2_data
+        target: /var/lib/kafka
+    command: "bash -c 'if [ ! -f /tmp/update_run.sh ]; then echo \"ERROR: Did you forget the update_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/update_run.sh && /etc/confluent/docker/run ; fi'"
 
-  zoo3:
-    image: zookeeper:${ZOOKEEPER_VERSION}
-    restart: unless-stopped
-    ports:
-      - "2183:2181"
-    environment:
-      # https://hub.docker.com/_/zookeeper/?tab=description&page=1&ordering=last_updated
-      ZOO_MY_ID: 3
-      ZOO_SERVERS: server.1=0.0.0.0:2888:3888;2181 server.2=zoo2:2888:3888;2181 server.3=zoo3:2888:3888;2181
 
-  kafka1:
-    # https://hub.docker.com/r/wurstmeister/kafka/tags?page=1&ordering=last_updated
-    image: wurstmeister/kafka:${KAFKA_VERSION}
-    container_name: kafka1
-    hostname: kafka1
-    restart: unless-stopped
-    ports:
-      - "9121:9121"
-    depends_on:
-      - "zoo1"
-      - "zoo2"
-      - "zoo3"
-    environment:
-      JAVA_ARGS:                            -Xmx512m
-      KAFKA_LISTENERS:                      PLAINTEXT://:9121
-      KAFKA_ADVERTISED_LISTENERS:           PLAINTEXT://kafka1:9121
-      KAFKA_ADVERTISED_PORT:                9121
-      KAFKA_PORT:                           9121
-      KAFKA_BROKER_ID:                      1
-      KAFKA_ZOOKEEPER_CONNECT:              zoo1,zoo2,zoo3
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE:      'false'
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
-      KAFKA_MIN_INSYNC_REPLICAS:            2
-      KAFKA_MESSAGE_MAX_BYTES:              3000000
-      KAFKA_REPLICA_FETCH_MAX_BYTES:        3000000
-      KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: 'false'
+volumes:
+  kafka1_data:
+  kafka2_data:
+  kafka3_data:
 
-  kafka2:
-    # https://hub.docker.com/r/wurstmeister/kafka/tags?page=1&ordering=last_updated
-    image: wurstmeister/kafka:${KAFKA_VERSION}
-    container_name: kafka2
-    hostname: kafka2
-    restart: unless-stopped
-    ports:
-      - "9122:9122"
-    depends_on:
-      - "zoo1"
-      - "zoo2"
-      - "zoo3"
-    environment:
-      JAVA_ARGS:                            -Xmx512m
-      KAFKA_LISTENERS:                      PLAINTEXT://:9122
-      KAFKA_ADVERTISED_LISTENERS:           PLAINTEXT://kafka2:9122
-      KAFKA_ADVERTISED_PORT:                9122
-      KAFKA_PORT:                           9122
-      KAFKA_BROKER_ID:                      2
-      KAFKA_ZOOKEEPER_CONNECT:              zoo2,zoo3,zoo1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE:      'false'
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
-      KAFKA_MIN_INSYNC_REPLICAS:            2
-      KAFKA_MESSAGE_MAX_BYTES:              3000000
-      KAFKA_REPLICA_FETCH_MAX_BYTES:        3000000
-      KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: 'false'
+  # broker2:
+  #   image: confluentinc/cp-kafka:${KAFKA_VERSION}${PLATFORM}
+  #   hostname: broker2
+  #   container_name: broker2
+  #   ports:
+  #     - "9093:9092"
+  #     - "9102:9102"
+  #   environment:
+  #     KAFKA_BROKER_ID: 2
+  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
+  #     KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker2:9092'
+  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  #     KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+  #     KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+  #     KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+  #     KAFKA_JMX_PORT: 9102
+  #     KAFKA_JMX_HOSTNAME: localhost
+  #     KAFKA_PROCESS_ROLES: 'broker,controller'
+  #     KAFKA_NODE_ID: 2
+  #     KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker1:29092,2@broker2:29092,3@broker3:29092'
+  #     KAFKA_LISTENERS: 'PLAINTEXT://:9092,CONTROLLER://:29092'
+  #     KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+  #     KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+  #     KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+  #   volumes:
+  #     - type: bind
+  #       source: ./scripts/update_run.sh
+  #       target: /tmp/update_run.sh
+  #     - type: volume
+  #       source: kafka2_data
+  #       target: /var/lib/kafka
+  #   command: "bash -c 'if [ ! -f /tmp/update_run.sh ]; then echo \"ERROR: Did you forget the update_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/update_run.sh && /etc/confluent/docker/run ; fi'"
 
-  kafka3:
-    # https://hub.docker.com/r/wurstmeister/kafka/tags?page=1&ordering=last_updated
-    image: wurstmeister/kafka:${KAFKA_VERSION}
-    container_name: kafka3
-    hostname: kafka3
-    restart: unless-stopped
-    ports:
-      - "9123:9123"
-    depends_on:
-      - "zoo1"
-      - "zoo2"
-      - "zoo3"
-    environment:
-      JAVA_ARGS:                            -Xmx512m
-      KAFKA_LISTENERS:                      PLAINTEXT://:9123
-      KAFKA_ADVERTISED_LISTENERS:           PLAINTEXT://kafka3:9123
-      KAFKA_ADVERTISED_PORT:                9123
-      KAFKA_PORT:                           9123
-      KAFKA_BROKER_ID:                      3
-      KAFKA_ZOOKEEPER_CONNECT:              zoo3,zoo2,zoo1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE:      'false'
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 2
-      KAFKA_MIN_INSYNC_REPLICAS:            2
-      KAFKA_MESSAGE_MAX_BYTES:              3000000
-      KAFKA_REPLICA_FETCH_MAX_BYTES:        3000000
-      KAFKA_UNCLEAN_LEADER_ELECTION_ENABLE: 'false'
-      KAFKA_CREATE_TOPICS:                  "test:8:2"
-
-  producer:
-    image: wurstmeister/kafka:${KAFKA_VERSION}
-    container_name: producer
-    depends_on:
-    - "kafka1"
-    - "kafka2"
-    - "kafka3"
-    command: /bin/sh -c 'seq 100000 | /opt/kafka/bin/kafka-console-producer.sh --request-required-acks 1 --broker-list kafka1:9121,kafka2:9122,kafka3:9123 --topic test && echo "Produced 42 messages."'
-
-  consumer:
-    image: wurstmeister/kafka:${KAFKA_VERSION}
-    container_name: consumer
-    depends_on:
-    - "kafka1"
-    - "kafka2"
-    - "kafka3"
-    command: /bin/sh -c '/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server kafka1:9121,kafka2:9122,kafka3:9123 --consumer-property group.id=test --topic test --from-beginning --timeout-ms 30000'
+  # broker3:
+  #   image: confluentinc/cp-kafka:${KAFKA_VERSION}${PLATFORM}
+  #   hostname: broker3
+  #   container_name: broker3
+  #   ports:
+  #     - "9094:9092"
+  #     - "9103:9103"
+  #   environment:
+  #     KAFKA_BROKER_ID: 3
+  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
+  #     KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker3:9092'
+  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  #     KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+  #     KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+  #     KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+  #     KAFKA_JMX_PORT: 9103
+  #     KAFKA_JMX_HOSTNAME: localhost
+  #     KAFKA_PROCESS_ROLES: 'broker,controller'
+  #     KAFKA_NODE_ID: 3
+  #     KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker1:29092,2@broker2:29092,3@broker3:29092'
+  #     KAFKA_LISTENERS: 'PLAINTEXT://:9092,CONTROLLER://:29092'
+  #     KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+  #     KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+  #     KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+  #   volumes:
+  #     - type: bind
+  #       source: ./scripts/update_run.sh
+  #       target: /tmp/update_run.sh
+  #     - type: volume
+  #       source: kafka3_data
+  #       target: /var/lib/kafka
+  #   command: "bash -c 'if [ ! -f /tmp/update_run.sh ]; then echo \"ERROR: Did you forget the update_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/update_run.sh && /etc/confluent/docker/run ; fi'"
