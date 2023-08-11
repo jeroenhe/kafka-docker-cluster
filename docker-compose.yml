@@ -24,14 +24,11 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      CLUSTER_ID: OWI2NTYxMGU1ODg2NDQyMW
     volumes:
-      - type: bind
-        source: ./scripts/update_run.sh
-        target: /tmp/update_run.sh
       - type: volume
         source: kafka1_data
         target: /var/lib/kafka
-    command: "bash -c 'if [ ! -f /tmp/update_run.sh ]; then echo \"ERROR: Did you forget the update_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/update_run.sh && /etc/confluent/docker/run ; fi'"
 
   broker2:
     image: confluentinc/cp-kafka:${KAFKA_VERSION}${PLATFORM}
@@ -57,83 +54,13 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      CLUSTER_ID: OWI2NTYxMGU1ODg2NDQyMW
     volumes:
-      - type: bind
-        source: ./scripts/update_run.sh
-        target: /tmp/update_run.sh
       - type: volume
         source: kafka2_data
         target: /var/lib/kafka
-    command: "bash -c 'if [ ! -f /tmp/update_run.sh ]; then echo \"ERROR: Did you forget the update_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/update_run.sh && /etc/confluent/docker/run ; fi'"
 
 
 volumes:
   kafka1_data:
   kafka2_data:
-  kafka3_data:
-
-  # broker2:
-  #   image: confluentinc/cp-kafka:${KAFKA_VERSION}${PLATFORM}
-  #   hostname: broker2
-  #   container_name: broker2
-  #   ports:
-  #     - "9093:9092"
-  #     - "9102:9102"
-  #   environment:
-  #     KAFKA_BROKER_ID: 2
-  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
-  #     KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker2:9092'
-  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-  #     KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-  #     KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-  #     KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-  #     KAFKA_JMX_PORT: 9102
-  #     KAFKA_JMX_HOSTNAME: localhost
-  #     KAFKA_PROCESS_ROLES: 'broker,controller'
-  #     KAFKA_NODE_ID: 2
-  #     KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker1:29092,2@broker2:29092,3@broker3:29092'
-  #     KAFKA_LISTENERS: 'PLAINTEXT://:9092,CONTROLLER://:29092'
-  #     KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
-  #     KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
-  #     KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
-  #   volumes:
-  #     - type: bind
-  #       source: ./scripts/update_run.sh
-  #       target: /tmp/update_run.sh
-  #     - type: volume
-  #       source: kafka2_data
-  #       target: /var/lib/kafka
-  #   command: "bash -c 'if [ ! -f /tmp/update_run.sh ]; then echo \"ERROR: Did you forget the update_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/update_run.sh && /etc/confluent/docker/run ; fi'"
-
-  # broker3:
-  #   image: confluentinc/cp-kafka:${KAFKA_VERSION}${PLATFORM}
-  #   hostname: broker3
-  #   container_name: broker3
-  #   ports:
-  #     - "9094:9092"
-  #     - "9103:9103"
-  #   environment:
-  #     KAFKA_BROKER_ID: 3
-  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
-  #     KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker3:9092'
-  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-  #     KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-  #     KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-  #     KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-  #     KAFKA_JMX_PORT: 9103
-  #     KAFKA_JMX_HOSTNAME: localhost
-  #     KAFKA_PROCESS_ROLES: 'broker,controller'
-  #     KAFKA_NODE_ID: 3
-  #     KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker1:29092,2@broker2:29092,3@broker3:29092'
-  #     KAFKA_LISTENERS: 'PLAINTEXT://:9092,CONTROLLER://:29092'
-  #     KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
-  #     KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
-  #     KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
-  #   volumes:
-  #     - type: bind
-  #       source: ./scripts/update_run.sh
-  #       target: /tmp/update_run.sh
-  #     - type: volume
-  #       source: kafka3_data
-  #       target: /var/lib/kafka
-  #   command: "bash -c 'if [ ! -f /tmp/update_run.sh ]; then echo \"ERROR: Did you forget the update_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/update_run.sh && /etc/confluent/docker/run ; fi'"
