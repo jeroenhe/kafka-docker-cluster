@@ -6,10 +6,10 @@ This project provides you with a Kafka cluster consisting of three brokers. It n
 
 The scripts are bash and work on linux and mac, but they are essentially just docker-compose commands. So you can also run them on windows.
 
-`./up.sh` starts the cluster and tails the log in the background (can be safely cancelled via crtl-c without stopping the containers).
-`./down.sh` stops (and removes).
-Use `./clean.sh` to remove related volumes containing kafka cluster data.
-`./restart.sh` will run docker-compose restart on all containers.
+- `./up.sh` starts the cluster and tails the log in the background (can be safely cancelled via crtl-c without stopping the containers).
+- `./down.sh` stops (and removes).
+- Use `./clean.sh` to remove related volumes containing kafka cluster data.
+- `./restart.sh` will run docker-compose restart on all containers.
 
 ## Configuration
 
@@ -21,11 +21,11 @@ Remember to comment the `PLATFORM` env in case you are not running on an arm64 p
 
 To manage the cluster, visit `http://localhost:8405` to see the [akhq](https://akhq.io/) website.
 
-Also, the `producer` container produces messages on the `test` topic and the `consumer` container consumes them. You can see the output in the logs of the `consumer` container (`docker-compose logs -f consumer`).
+Also, the `producer` container produces messages on the `test` topic and the `consumer` container consumes them. You can see the output in the logs of the `consumer` container (`docker-compose logs -f consumer`), or via the akhq website.
 
 ## Disclaimer
 
-This setup is not meant for production usage, but is very well suited for local integration testing projects and a means of getting to know kafka and zookeeper.
+This setup is not meant for production usage, but is very well suited for local integration testing projects and a means of getting to know kafka.
 
 ## Acknowledgements
 
