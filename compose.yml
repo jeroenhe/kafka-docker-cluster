@@ -25,7 +25,7 @@ services:
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
-      CLUSTER_ID: OWI2NTYxMGU1ODg2NDQyMW
+      CLUSTER_ID: ${CLUSTER_ID}
     volumes:
       - type: volume
         source: kafka1_data
@@ -96,11 +96,15 @@ services:
   akhq:
     image: tchiotludo/akhq:latest
     environment:
-      - JAVA_OPTS=-Duser.timezone=Europe/Amsterdam
+      JAVA_OPTS: -Duser.timezone=Europe/Amsterdam
+      AKHQ_CONFIGURATION: |
+        akhq:
+          connections:
+            local:
+              properties:
+                bootstrap.servers: "broker1:9092,broker2:9092,broker3:9092"
     ports:
-      - "8080:8080"
-    volumes:
-      - ./kafka-ui/application.yml:/app/application.yml
+      - "8405:8080"
 
 
 volumes:

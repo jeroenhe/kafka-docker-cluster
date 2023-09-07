@@ -1,11 +1,27 @@
 # Kafka cluster
 
-This project provides you with a Kafka cluster consisting of three brokers. Besides, zookeeper is also run as a 3-node cluster.
+This project provides you with a Kafka cluster consisting of three brokers. It no longer depends on Zookeeper because it uses [Kraft](https://developer.confluent.io/learn/kraft/) which is available and started from the kafka container.
 
-Run it with `docker-compose up -d`.
+## Scripts
 
-Confirm that kafka & zookeeper work by looking at logs for producer and consumer:
-`docker logs -f consumer` and `docker logs -f producer`.
+The scripts are bash and work on linux and mac, but they are essentially just docker-compose commands. So you can also run them on windows.
+
+`./up.sh` starts the cluster and tails the log in the background (can be safely cancelled via crtl-c without stopping the containers).
+`./down.sh` stops (and removes).
+Use `./clean.sh` to remove related volumes containing kafka cluster data.
+`./restart.sh` will run docker-compose restart on all containers.
+
+## Configuration
+
+Topic creation is enabled for the cluster via the `KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'` setting.
+To update the (confluent) kafka version and others, edit the `.env` file.
+Remember to comment the `PLATFORM` env in case you are not running on an arm64 platform.
+
+## Testing
+
+To manage the cluster, visit `http://localhost:8405` to see the [akhq](https://akhq.io/) website.
+
+## Disclaimer
 
 This setup is not meant for production usage, but is very well suited for local integration testing projects and a means of getting to know kafka and zookeeper.
 
