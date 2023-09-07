@@ -13,13 +13,15 @@ Use `./clean.sh` to remove related volumes containing kafka cluster data.
 
 ## Configuration
 
-Topic creation is enabled for the cluster via the `KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'` setting.
+Topic creation is disabled, but can be enabled for the cluster via the `KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'` setting.
 To update the (confluent) kafka version and others, edit the `.env` file.
 Remember to comment the `PLATFORM` env in case you are not running on an arm64 platform.
 
 ## Testing
 
 To manage the cluster, visit `http://localhost:8405` to see the [akhq](https://akhq.io/) website.
+
+Also, the `producer` container produces messages on the `test` topic and the `consumer` container consumes them. You can see the output in the logs of the `consumer` container (`docker-compose logs -f consumer`).
 
 ## Disclaimer
 
