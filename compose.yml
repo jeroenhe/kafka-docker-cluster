@@ -113,8 +113,7 @@ services:
       - "broker1"
       - "broker2"
       - "broker3"
-    command: |
-      /bin/bash -c '/usr/bin/kafka-topics --bootstrap-server broker1:9092,broker2:9092,broker3:9092 --create --if-not-exists --topic test --partitions 6 --replication-factor 3'
+    command: /bin/bash -c '/usr/bin/kafka-topics --bootstrap-server broker1:9092,broker2:9092,broker3:9092 --create --if-not-exists --topic test --partitions 6 --replication-factor 3'
 
   producer:
     image: confluentinc/cp-kafka:${KAFKA_VERSION}${PLATFORM}
@@ -134,8 +133,7 @@ services:
       - "broker2"
       - "broker3"
       - kafka-setup
-    command: |
-      /bin/sh -c '/usr/bin/kafka-console-consumer --bootstrap-server broker1:9092,broker2:9092,broker3:9092 --topic test --from-beginning'
+    command: /bin/sh -c '/usr/bin/kafka-console-consumer --bootstrap-server broker1:9092,broker2:9092,broker3:9092 --topic test --from-beginning'
 
 
 volumes:
