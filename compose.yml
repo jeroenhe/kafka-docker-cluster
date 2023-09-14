@@ -5,92 +5,24 @@ services:
     container_name: broker1
     ports:
       - "9092:9092"
-      - "9101:9101"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
-      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker1:9092'
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_JMX_PORT: 9101
-      KAFKA_JMX_HOSTNAME: localhost
-      KAFKA_PROCESS_ROLES: 'broker,controller'
-      KAFKA_NODE_ID: 1
       # https://kafka.apache.org/documentation/#brokerconfigs_controller.quorum.voters
-      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker1:29092,2@broker2:29092,3@broker3:29092'
-      KAFKA_LISTENERS: 'PLAINTEXT://:9092,CONTROLLER://:29092'
-      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
-      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
-      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
       CLUSTER_ID: ${CLUSTER_ID}
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker1:9092'
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker1:29092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
+      KAFKA_LISTENERS: 'PLAINTEXT://:9092,CONTROLLER://:29092'
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      KAFKA_NODE_ID: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_NUM_PARTITIONS: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
     volumes:
       - type: volume
         source: kafka1_data
-        target: /var/lib/kafka
-
-  broker2:
-    image: confluentinc/cp-kafka:${KAFKA_VERSION}${PLATFORM}
-    hostname: broker2
-    container_name: broker2
-    ports:
-      - "9093:9092"
-      - "9102:9102"
-    environment:
-      KAFKA_BROKER_ID: 2
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
-      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker2:9092'
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_JMX_PORT: 9102
-      KAFKA_JMX_HOSTNAME: localhost
-      KAFKA_PROCESS_ROLES: 'broker,controller'
-      KAFKA_NODE_ID: 2
-      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker1:29092,2@broker2:29092,3@broker3:29092'
-      KAFKA_LISTENERS: 'PLAINTEXT://:9092,CONTROLLER://:29092'
-      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
-      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
-      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
-      CLUSTER_ID: OWI2NTYxMGU1ODg2NDQyMW
-    volumes:
-      - type: volume
-        source: kafka2_data
-        target: /var/lib/kafka
-
-  broker3:
-    image: confluentinc/cp-kafka:${KAFKA_VERSION}${PLATFORM}
-    hostname: broker3
-    container_name: broker3
-    ports:
-      - "9094:9092"
-      - "9103:9103"
-    environment:
-      KAFKA_BROKER_ID: 3
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'
-      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://broker3:9092'
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_JMX_PORT: 9103
-      KAFKA_JMX_HOSTNAME: localhost
-      KAFKA_PROCESS_ROLES: 'broker,controller'
-      KAFKA_NODE_ID: 3
-      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@broker1:29092,2@broker2:29092,3@broker3:29092'
-      KAFKA_LISTENERS: 'PLAINTEXT://:9092,CONTROLLER://:29092'
-      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
-      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
-      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
-      CLUSTER_ID: OWI2NTYxMGU1ODg2NDQyMW
-    volumes:
-      - type: volume
-        source: kafka3_data
         target: /var/lib/kafka
 
   akhq:
@@ -102,7 +34,7 @@ services:
           connections:
             local:
               properties:
-                bootstrap.servers: "broker1:9092,broker2:9092,broker3:9092"
+                bootstrap.servers: "broker1:9092"
     ports:
       - "8405:8080"
 
@@ -111,32 +43,24 @@ services:
     container_name: kafka-setup
     depends_on:
       - "broker1"
-      - "broker2"
-      - "broker3"
-    command: /bin/bash -c '/usr/bin/kafka-topics --bootstrap-server broker1:9092,broker2:9092,broker3:9092 --create --if-not-exists --topic test --partitions 6 --replication-factor 3'
+    command: /bin/bash -c '/usr/bin/kafka-topics --bootstrap-server broker1:9092 --create --if-not-exists --topic test --partitions 3 --replication-factor 1'
 
   producer:
     image: confluentinc/cp-kafka:${KAFKA_VERSION}${PLATFORM}
     container_name: producer
     depends_on:
       - "broker1"
-      - "broker2"
-      - "broker3"
       - "kafka-setup"
-    command: /bin/bash -c 'for nr in {1..1000000}; do echo "$(date +%s) "#"$$nr"; sleep .5; done | /usr/bin/kafka-console-producer --request-required-acks all --broker-list broker1:9092,broker2:9092,broker3:9092 --topic test'
+    command: /bin/bash -c 'for nr in {1..1000000}; do echo "$(date +%s) "#"$$nr"; sleep .5; done | /usr/bin/kafka-console-producer --request-required-acks all --broker-list broker1:9092 --topic test'
 
   consumer:
     image: confluentinc/cp-kafka:${KAFKA_VERSION}${PLATFORM}
     container_name: consumer
     depends_on:
       - "broker1"
-      - "broker2"
-      - "broker3"
       - kafka-setup
-    command: /bin/sh -c '/usr/bin/kafka-console-consumer --bootstrap-server broker1:9092,broker2:9092,broker3:9092 --topic test --from-beginning'
+    command: /bin/sh -c '/usr/bin/kafka-console-consumer --bootstrap-server broker1:9092 --topic test --from-beginning'
 
 
 volumes:
   kafka1_data:
-  kafka2_data:
-  kafka3_data:
